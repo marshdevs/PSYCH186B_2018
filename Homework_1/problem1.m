@@ -1,0 +1,1 @@
+histogram(rand(50000, 1), 10);
