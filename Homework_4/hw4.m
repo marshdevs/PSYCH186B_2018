@@ -5,7 +5,6 @@ max_inhibition = 2.0;
 length_constant = 2;
 neurons = 80;
 iterations = 50;
-T = 50;
 minfirerate = 0;
 maxfirerate = 100;
 epsilon = 1/500;
@@ -62,7 +61,7 @@ new_state_vector = zeros(neurons, 1);
 for i = 1:iterations
     for j = 1:neurons
         weight_vector = inhibitory_weight(distances, j);
-        new_state_vector(j) = current_state_vector(j) + epsilon*(initial_state_vector(j) + dot(weight_vector, current_state_vector') - current_state_vector(j));
+        new_state_vector(j) = current_state_vector(j) + epsilon*(initial_state_vector(j) + dot(weight_vector, current_state_vector) - current_state_vector(j));
     end
     new_state_vector(find(new_state_vector < 0)) = minfirerate;
     new_state_vector(find(new_state_vector > maxfirerate)) = maxfirerate;
