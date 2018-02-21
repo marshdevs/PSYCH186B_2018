@@ -1,34 +1,24 @@
 %%% Homework 5 - Archival Intelligence %%%
+function network = archival_intelligence( input )
 network = [100 100 100 100 100 100 100 100 100 100];
-input = ["______" 7.3  "_____" "Light Gray" 2.1];
+
+input = serialize_data(input, 1, 5);
+
 epsilon = 1/100;
 iterations = 50;
 
 %%% Name Layer %%%
-name_value = input(1);
-network = name_layer(network, name_value, epsilon, iterations);
+network = name_layer(network, input{1,1}, epsilon, iterations);
 
 %%% Warp Drive Layer %%%
-murds_value = input(2);
-network = murds_layer(network, murds_value, epsilon, iterations);
+network = murds_layer(network, input{1,2}, epsilon, iterations);
 
 %%% Hailing Transponder Layer %%%
-gigahz_value = input(3);
-network = gigahz_layer(network, gigahz_value, epsilon, iterations);
+network = gigahz_layer(network, input{1,3}, epsilon, iterations);
 
 %%% Surface Reflect Layer %%%
-color_value = input(4);
-network = color_layer(network, color_value, epsilon, iterations);
+network = color_layer(network, input{1,4}, epsilon, iterations);
 
 %%% Axis Ratio Layer %%%
-ratio_value = input(5);
-network = ratio_layer(network, ratio_value, epsilon, iterations);
-fprintf("%d,", network);
+network = ratio_layer(network, input{1,5}, epsilon, iterations);
 
-%%% Origin Output %%%
-% network = origin_output(network);
-
-%%% Req. Action Conclusion %%%
-% conclusion = req_action(network);
-
-% fprintf("Required action: %s", conclusion);
