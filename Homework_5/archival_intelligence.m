@@ -1,24 +1,24 @@
 %%% Homework 5 - Archival Intelligence %%%
-function network = archival_intelligence( input )
-network = [100 100 100 100 100 100 100 100 100 100];
+function data = archival_intelligence( input )
 
 input = serialize_data(input, 1, 5);
 
-epsilon = 1/100;
-iterations = 50;
-
 %%% Name Layer %%%
-network = name_layer(network, input{1,1}, epsilon, iterations);
+input{1,1} = char_layer(input{1,1});
 
 %%% Warp Drive Layer %%%
-network = murds_layer(network, input{1,2}, epsilon, iterations);
+input{1,2} = num_layer(input{1,2});
 
 %%% Hailing Transponder Layer %%%
-network = gigahz_layer(network, input{1,3}, epsilon, iterations);
+input{1,3} = num_layer(input{1,3});
 
 %%% Surface Reflect Layer %%%
-network = color_layer(network, input{1,4}, epsilon, iterations);
+input{1,4} = char_layer(input{1,4});
 
 %%% Axis Ratio Layer %%%
-network = ratio_layer(network, input{1,5}, epsilon, iterations);
+input{1,5} = num_layer(input{1,5});
 
+data = [];
+for i = 1:5
+    data = [data, input{1,i}];
+end
