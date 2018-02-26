@@ -1,7 +1,10 @@
-function output = origin_output( network )
+function output = origin_output( input )
 %
 %
 %
+
+learning_trials = 100000;
+epsilon = 1/1000;
 
 f_training_set = {'Grotz', 6.9, 1006.4, 'Black', 3.5;
     'Tlarr',7.0,994.3,'Black',2.3;
@@ -25,53 +28,58 @@ f_training_set = {'Grotz', 6.9, 1006.4, 'Black', 3.5;
     'Cinnamon',6.5,1055.0,'Light Gray',1.7
 };
 f_network_output = [];
-ortho = randn(1, 10);
 for i = 1:20
-    network = archival_intelligence(f_training_set(i,:));
-    network = network - dot(network, ortho) * ortho;
-    network = network/norm(network);
-    f_network_output = [f_network_output; network];
+    data = archival_intelligence(f_training_set(i,:));
+    data = data/norm(data);
+    f_network_output = [f_network_output; data];
 end
 
 
-g_training_set = [
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 1, 0, 0, 0, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 1, 0, 0, 0;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-];
-
-A = zeros(10, 10);
+g_training_set = [];
 for i = 1:20
-    ft = transpose(f_network_output(i,:));
-    ai = ft * g_training_set(i,:);
-    A = A + ai;
+    g = zeros(1,50);
+    if i < 6
+        g(10) = 1;
+    elseif i < 11
+        g(20) = 1;
+    elseif i < 16
+        g(30) = 1;
+    else
+        g(40) = 1;
+    end
+    g_training_set = [g_training_set; g];
 end
+g_training_set = g_training_set/norm(g_training_set);        
 
-input = {'Cinnamon',6.5,1055.0,'Light Gray',1.7};
+% A = zeros(50, 50);
+% for i = 1:20
+%     ft = f_network_output(i,:);
+%     ai = transpose(ft) * g_training_set(i,:);
+%     A = A + ai;
+% end
+g_training_set = g_training_set';
+f_network_output = f_network_output';
+A = g_training_set * f_network_output';
+
+for i = 1:learning_trials
+    vi = floor(rand*20) + 1;
+    ki = 1/(f_network_output(:,vi)' * f_network_output(:,vi)) - epsilon;
+    gprime = A * f_network_output(:,vi);
+    deltaA = ki*(g_training_set(:, vi) - gprime)*f_network_output(:,vi)';
+    A = A + deltaA;
+end
 
 network = archival_intelligence(input);
-network = network - dot(network, ortho) * ortho;
 network = network/norm(network);
-gprime = network * A;
+network = network';
+gprime = A * network;
 
+compare = [];
 for i = 1:20
-    compare = dot(gprime, g_training_set(i,:));
-    fprintf('Input compared to training data %d: %2f\n', i, compare);
+    e = (g_training_set(:, i) - gprime)*(g_training_set(:, i) - gprime)';
+    l = norm(e);
+    compare = [compare, l];
 end
+[val, index] = min(compare);
+
+output = index;
