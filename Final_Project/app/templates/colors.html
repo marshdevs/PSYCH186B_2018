@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/d3/d3.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/d3/d3.geom.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/d3/d3.layout.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.0.9/howler.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"/>
+    <style type="text/css">
+
+circle {
+  stroke: #000;
+  stroke-opacity: .5;
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="body">
+      <div id="footer">
+        Music Mood Meter
+        <div id="drop-zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+          <span id="prompt-text">Drag and drop file here...</span>
+          <form enctype="multitype/form-data" method="post" name="fileinfo">
+            <input type="file" id="fileInput" required/>
+            <input type="submit" value="upload"/>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+
+var w = 1480,
+    h = 800;
+
+var nodes = d3.range(400).map(function() { return {radius: Math.random() * 40 + 6}; }),
+    color = d3.scale.category20b();
+
+var force = d3.layout.force()
+    .gravity(0.05)
+    .charge(function(d, i) { return i ? 0 : -10000; })
+    .nodes(nodes)
+    .size([w, h]);
+
+var root = nodes[0];
+root.radius = 0;
+root.fixed = true;
+
+force.start();
+
+var svg = d3.select("#body").append("svg:svg")
+    .attr("width", w)
+    .attr("height", h);
+
+svg.selectAll("circle")
+    .data(nodes.slice(1))
+  .enter().append("svg:circle")
+    .attr("r", function(d) { return d.radius - 2; })
+    .style("fill", function(d, i) { return color(i % 20); });
+
+force.on("tick", function(e) {
+  var q = d3.geom.quadtree(nodes),
+      i = 0,
+      n = nodes.length;
+
+  while (++i < n) {
+    q.visit(collide(nodes[i]));
+  }
+
+  svg.selectAll("circle")
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+});
+
+svg.on("mousemove", function() {
+  var p1 = d3.svg.mouse(this);
+  root.px = p1[0];
+  root.py = p1[1];
+  force.resume();
+});
+
+function collide(node) {
+  var r = node.radius + 16,
+      nx1 = node.x - r,
+      nx2 = node.x + r,
+      ny1 = node.y - r,
+      ny2 = node.y + r;
+  return function(quad, x1, y1, x2, y2) {
+    if (quad.point && (quad.point !== node)) {
+      var x = node.x - quad.point.x,
+          y = node.y - quad.point.y,
+          l = Math.sqrt(x * x + y * y),
+          r = node.radius + quad.point.radius;
+      if (l < r) {
+        l = (l - r) / l * .5;
+        node.x -= x *= l;
+        node.y -= y *= l;
+        quad.point.x += x;
+        quad.point.y += y;
+      }
+    }
+    return x1 > nx2
+        || x2 < nx1
+        || y1 > ny2
+        || y2 < ny1;
+  };
+}
+
+function dropHandler(event) {
+  var fileInput = document.getElementById('fileInput');
+  fileInput.files = event.dataTransfer.files;
+  console.log(fileInput);
+  event.preventDefault();
+}
+
+function dragOverHandler(event) {
+  event.preventDefault();
+}
+
+
+var form = document.forms.namedItem("fileinfo");
+var fileInput = document.getElementById('fileInput');
+
+form.addEventListener('submit', function(ev) {
+
+  document.getElementById('prompt-text').textContent = "Reading...";
+
+  var oData = new FormData();
+  oData.append('file', fileInput.files[0]);
+  var oReq = new XMLHttpRequest();
+  oReq.open("POST", "http://localhost:5000/song/", true);
+  oReq.onload = function(oEvent) {
+    console.log("File processed.");
+  };
+  oReq.onreadystatechange = function () {
+    if(oReq.readyState === XMLHttpRequest.DONE && oReq.status === 200) {
+      console.log(JSON.parse(oReq.response));
+      var wholeSongPred = JSON.parse(oReq.response)['predictions'].length - 1;
+      var color = JSON.parse(oReq.response)['predictions'][wholeSongPred][0];
+      var confidence = JSON.parse(oReq.response)['predictions'][wholeSongPred][1] / 100.0;
+
+      var baseColor = {
+        'aggressive': 'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',//'red',
+        'calm': 'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',//'green',
+        'happy': 'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',//'yellow',
+        'sad': 'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + confidence + ')',//'blue',
+      }
+
+      colorChange(JSON.parse(oReq.response)['predictions'][0]);
+
+      var url = URL.createObjectURL(fileInput.files[0]);
+
+      var audio = new Audio();
+      audio.src = url;
+      audio.play();
+
+      throwBeats(JSON.parse(oReq.response)['beats'], JSON.parse(oReq.response)['predictions'], baseColor[color]);
+      document.getElementById('prompt-text').textContent = "Drag and drop file here...";
+    }
+  };
+
+  oReq.send(oData);
+  ev.preventDefault();
+}, false);
+
+function throwBeats(beats, predictions, baseColor) {
+  console.log(predictions);
+  for (var i = 0; i < beats.length; i++) {
+    setTimeout(function(pred, base) {
+      // colorChange(pred);
+      colorChangeSaveBase(pred, base)
+
+      var circles = svg.selectAll("circle");
+      var vi = Math.floor(Math.random() * circles[0].length);
+      root.px = (w-800) * Math.random() + 400;
+      root.py = (h-300) * Math.random() + 150;
+      // console.log("x: " + root.px);
+      // console.log("y: " + root.py);
+      force.resume();
+    }, beats[i] * 1000, predictions[i], baseColor);
+  }
+}
+
+function colorChange(pred) {
+  var color = pred[0];
+  var confidence = pred[1] / 100.0;
+
+  var colorChange = {
+    'aggressive': [
+      'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+    ],//'red',
+    'calm': [
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+    ],//'green',
+    'happy': [
+      'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+    ],//'yellow',
+    'sad': [
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + confidence + ')',
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + confidence + ')',
+    ],//'blue',
+  }
+
+  circles = svg.selectAll("circle");
+  svg.selectAll("circle").style("fill", function(d, i) {
+    return colorChange[color][i % 3];
+  });
+}
+
+function colorChangeSaveBase(pred, base) {
+  var color = pred[0];
+  var confidence = pred[1] / 100.0;
+
+  var colorChange = {
+    'aggressive': [
+      'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      base,
+      'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+    ],//'red',
+    'calm': [
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      base,
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+    ],//'green',
+    'happy': [
+      'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+      base,
+      'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+    ],//'yellow',
+    'sad': [
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + confidence + ')',
+      base,
+      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + confidence + ')',
+    ],//'blue',
+  }
+
+  circles = svg.selectAll("circle");
+  svg.selectAll("circle").style("fill", function(d, i) {
+    return colorChange[color][i % 3];
+  });
+}
+
+    </script>
+  </body>
+</html>
