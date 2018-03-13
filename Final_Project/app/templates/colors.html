@@ -20,8 +20,9 @@ circle {
   </head>
   <body>
     <div id="body">
+      <div class="loader hidden"></div>
       <div id="footer">
-        Music Mood Meter
+        <img src="{{ url_for('static',filename='img/mmm_circ.png') }}" width=32 height=32> Mooderator
         <div id="drop-zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
           <span id="prompt-text">Drag and drop file here...</span>
           <form enctype="multitype/form-data" method="post" name="fileinfo">
@@ -33,10 +34,12 @@ circle {
     </div>
     <script type="text/javascript">
 
+var audio = new Audio();
+
 var w = 1480,
     h = 800;
 
-var nodes = d3.range(400).map(function() { return {radius: Math.random() * 40 + 6}; }),
+var nodes = d3.range(350).map(function() { return {radius: Math.random() * 40 + 6}; }),
     color = d3.scale.category20b();
 
 var force = d3.layout.force()
@@ -75,12 +78,12 @@ force.on("tick", function(e) {
       .attr("cy", function(d) { return d.y; });
 });
 
-svg.on("mousemove", function() {
-  var p1 = d3.svg.mouse(this);
-  root.px = p1[0];
-  root.py = p1[1];
-  force.resume();
-});
+// svg.on("mousemove", function() {
+//   var p1 = d3.svg.mouse(this);
+//   root.px = p1[0];
+//   root.py = p1[1];
+//   force.resume();
+// });
 
 function collide(node) {
   var r = node.radius + 16,
@@ -127,6 +130,7 @@ var fileInput = document.getElementById('fileInput');
 form.addEventListener('submit', function(ev) {
 
   document.getElementById('prompt-text').textContent = "Reading...";
+  document.getElementsByClassName('loader')[0].classList.remove('hidden');
 
   var oData = new FormData();
   oData.append('file', fileInput.files[0]);
@@ -137,24 +141,65 @@ form.addEventListener('submit', function(ev) {
   };
   oReq.onreadystatechange = function () {
     if(oReq.readyState === XMLHttpRequest.DONE && oReq.status === 200) {
+      document.getElementsByClassName('loader')[0].classList.add('hidden');
+
       console.log(JSON.parse(oReq.response));
       var wholeSongPred = JSON.parse(oReq.response)['predictions'].length - 1;
       var color = JSON.parse(oReq.response)['predictions'][wholeSongPred][0];
       var confidence = JSON.parse(oReq.response)['predictions'][wholeSongPred][1] / 100.0;
 
       var baseColor = {
-        'aggressive': 'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',//'red',
-        'calm': 'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',//'green',
-        'happy': 'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',//'yellow',
-        'sad': 'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + confidence + ')',//'blue',
+        'aggressive': [
+          'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+        ],//'red',
+        'calm': [
+          'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+        ],//'green',
+        'happy': [
+          'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(confidence * 180) + ', ' + Math.floor(confidence * 180) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
+        ],//'yellow',
+        'sad': [
+          'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 180) + ', ' + confidence + ')',
+          'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + confidence + ')',
+        ],//'blue',
       }
+      // siri voice
+      // if ('speechSynthesis' in window) {
+      //   var messages = {
+      //     'aggressive': "You won't like me when I'm angry.",
+      //     'calm': "Mooderator is feeling calm.",
+      //     'happy': "Mooderator is happy.",
+      //     'sad': "Mooderator is sad.",
+      //   }
+      //   window.speechSynthesis.speak(new SpeechSynthesisUtterance(messages[color]));
+      // }
 
+      // GET RID OF THE TIMEOUT LATER
+      // function sleep(milliseconds) {
+      //   var start = new Date().getTime();
+      //   for (var i = 0; i < 1e7; i++) {
+      //     if ((new Date().getTime() - start) > milliseconds){
+      //       break;
+      //     }
+      //   }
+      // }
+      // sleep(6000);
+
+      // change color
       colorChange(JSON.parse(oReq.response)['predictions'][0]);
 
+      // play song
       var url = URL.createObjectURL(fileInput.files[0]);
 
-      var audio = new Audio();
       audio.src = url;
+      audio.load();
       audio.play();
 
       throwBeats(JSON.parse(oReq.response)['beats'], JSON.parse(oReq.response)['predictions'], baseColor[color]);
@@ -223,23 +268,23 @@ function colorChangeSaveBase(pred, base) {
 
   var colorChange = {
     'aggressive': [
-      'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
-      base,
+      base[0],
+      base[1],
       'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
     ],//'red',
     'calm': [
-      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
-      base,
+      base[0],
+      base[1],
       'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
     ],//'green',
     'happy': [
-      'rgba(' + Math.floor(confidence * 255) + ', ' + Math.floor(confidence * 255) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
-      base,
+      base[0],
+      base[1],
       'rgba(' + Math.floor(confidence * 120) + ', ' + Math.floor(confidence * 120) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + confidence + ')',
     ],//'yellow',
     'sad': [
-      'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 255) + ', ' + confidence + ')',
-      base,
+      base[0],
+      base[1],
       'rgba(' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(255 * (1 - confidence)) + ', ' + Math.floor(confidence * 120) + ', ' + confidence + ')',
     ],//'blue',
   }

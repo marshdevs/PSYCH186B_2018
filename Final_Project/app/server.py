@@ -38,7 +38,7 @@ def get_mood():
 	print(file)
 	file.save(file_path)
 
-	model.test_model(classifier)
+	# model.test_model(classifier)
 
 	results, beats = model.predict_model(classifier, file_path)
 	print(results)

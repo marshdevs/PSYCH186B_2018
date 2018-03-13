@@ -15,8 +15,8 @@ csv_fieldnames = ['name', 'frame', 'intensity_spectrum', 'pitch_spectrum', 'timb
 csv_writer = csv.DictWriter(csv_file, fieldnames=csv_fieldnames)
 csv_writer.writeheader()
 
-audio_path = './res/SHAPE_OF_YOU_BACKING_VOX.wav'
-audio_name = re.findall('\/.*\.wav$', audio_path)[0]
+audio_path = 'happy1(Sad Demo).wav'
+audio_name = re.findall(r'.*\.wav$', audio_path)[0]
 
 # Time series
 y, sr = librosa.load(audio_path, sr=44100)
@@ -151,34 +151,34 @@ plt.title('Perceptually weighted log CQT (mean aggregation)')
 plt.colorbar(format='%+2.0f dB')
 
 plt.tight_layout()
-# plt.show()
+plt.show()
 
-print("Feature aggregation: ")
-intensity_frames = np.matrix(CQT_sync).getT()
-print("Shape of Intensity spectogram: ")
-print(intensity_frames.shape)
-pitch_frames = np.matrix(C_sync).getT()
-print("Shape of Pitch spectogram: ")
-print(pitch_frames.shape)
-timbre_frames = np.matrix(M_sync).getT()
-print("Shape of Timbre spectogram: ")
-print(timbre_frames.shape)
+# print("Feature aggregation: ")
+# intensity_frames = np.matrix(CQT_sync).getT()
+# print("Shape of Intensity spectogram: ")
+# print(intensity_frames.shape)
+# pitch_frames = np.matrix(C_sync).getT()
+# print("Shape of Pitch spectogram: ")
+# print(pitch_frames.shape)
+# timbre_frames = np.matrix(M_sync).getT()
+# print("Shape of Timbre spectogram: ")
+# print(timbre_frames.shape)
 
-for beat in range(len(beats)):
-	print("Frame: " + str(beat))
-	intensity_frame = np.array(intensity_frames[beat,:])[0]
-	print(" - Mean intensity: " + str(np.mean(intensity_frame)))
-	pitch_frame = np.array(pitch_frames[beat,:])[0]
-	print(" - Mean pitch: " + str(np.mean(pitch_frame)))
-	timbre_frame = np.array(timbre_frames[beat,:])[0]
-	print(" - Mean timbre: " + str(np.mean(timbre_frame)))
+# for beat in range(len(beats)):
+# 	print("Frame: " + str(beat))
+# 	intensity_frame = np.array(intensity_frames[beat,:])[0]
+# 	print(" - Mean intensity: " + str(np.mean(intensity_frame)))
+# 	pitch_frame = np.array(pitch_frames[beat,:])[0]
+# 	print(" - Mean pitch: " + str(np.mean(pitch_frame)))
+# 	timbre_frame = np.array(timbre_frames[beat,:])[0]
+# 	print(" - Mean timbre: " + str(np.mean(timbre_frame)))
 
-	frame_time = 0
-	if (beat == 0):
-		frame_time = str(librosa.frames_to_time(beats, sr=sr)[0])
-	else:
-		frame_time = librosa.frames_to_time(beats, sr=sr)[beat] - librosa.frames_to_time(beats, sr=sr)[beat - 1]
-	print(" - Frame time (tempo): " + str(frame_time))
+# 	frame_time = 0
+# 	if (beat == 0):
+# 		frame_time = str(librosa.frames_to_time(beats, sr=sr)[0])
+# 	else:
+# 		frame_time = librosa.frames_to_time(beats, sr=sr)[beat] - librosa.frames_to_time(beats, sr=sr)[beat - 1]
+# 	print(" - Frame time (tempo): " + str(frame_time))
 
-	csv_writer.writerow({'name': audio_name, 'frame': beat, 'intensity_spectrum': intensity_frame, 'pitch_spectrum': pitch_frame, 'timbre_spectrum': timbre_frame, 'frame_time': frame_time})
+# 	csv_writer.writerow({'name': audio_name, 'frame': beat, 'intensity_spectrum': intensity_frame, 'pitch_spectrum': pitch_frame, 'timbre_spectrum': timbre_frame, 'frame_time': frame_time})
 

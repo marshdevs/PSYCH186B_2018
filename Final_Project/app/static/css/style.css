@@ -1,11 +1,13 @@
 body {
   /*background: url(https://mbostock.github.io/d3/talk/20111018/texture-noise.png);*/
   background-color: #656565;
+  /*background-color: #FBF9F3;*/
   overflow: hidden;
   margin: 0;
   font-size: 14px;
   font-family: "Helvetica Neue", Helvetica;
   color: #ffffff;
+  /*color: #000000;*/
 }
 
 #chart, #header, #footer {
@@ -22,8 +24,9 @@ body {
 }
 
 #drop-zone {
-  border: 5px solid rgba(197, 180, 180, 0.8);
-  border-radius: 2px;
+  border: 1px solid rgba(197, 180, 180, 0.8);
+  padding: 5px 5px;
+  border-radius: 4px;
   background-color: rgba(197, 188, 180, 0.4);
 }
 
@@ -56,6 +59,28 @@ pre {
 line {
   stroke: #000;
   stroke-width: 1.5px;
+}
+
+.loader {
+  position: absolute;
+  top: 300px;
+  right: 140px;
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 3px solid #BD9D9D; /* Blue */
+  border-bottom: 3px solid #BD9D9D;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.hidden {
+  display: none;
 }
 
 .string, .regexp {
