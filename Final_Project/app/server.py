@@ -1,10 +1,12 @@
 import os
 from flask import Flask, request, Response, render_template, send_from_directory
-import tensorflow as tf
-import classify_mood as model
 import json
+import tensorflow as tf
+import classify_mood as dnn_model
 
 app = Flask(__name__, static_url_path='/Users/marsh/Desktop/Education/Classes/Winter18/PSYCH186B_2018/Final_Project/app/static')
+
+# DNN ----------------
 
 feature_columns = ['max_intensity','min_intensity','mean_intensity','median_intensity', 'max_pitch', 'min_pitch', 'mean_pitch', 'median_pitch', 
 	'max_timbre', 'min_timbre', 'mean_timbre', 'median_timbre', 'max_time', 'min_time', 'mean_time', 'median_time']
@@ -19,9 +21,11 @@ classifier = tf.estimator.DNNClassifier(
 		n_classes=4
 	)
 
+# Server ----------------
+
 @app.before_first_request
 def model_init():
-	model.train_model(classifier)
+	dnn_model.train_model(classifier)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -38,9 +42,10 @@ def get_mood():
 	print(file)
 	file.save(file_path)
 
-	# model.test_model(classifier)
+	# DNN
+	# dnn_model.test_model(classifier)
+	results, beats = dnn_model.predict_model(classifier, file_path)
 
-	results, beats = model.predict_model(classifier, file_path)
 	print(results)
 
 	return Response(json.dumps({

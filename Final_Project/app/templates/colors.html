@@ -218,13 +218,11 @@ function throwBeats(beats, predictions, baseColor) {
       // colorChange(pred);
       colorChangeSaveBase(pred, base)
 
-      var circles = svg.selectAll("circle");
-      var vi = Math.floor(Math.random() * circles[0].length);
+      // Choose beat position randomly
       root.px = (w-800) * Math.random() + 400;
       root.py = (h-300) * Math.random() + 150;
-      // console.log("x: " + root.px);
-      // console.log("y: " + root.py);
       force.resume();
+
     }, beats[i] * 1000, predictions[i], baseColor);
   }
 }
