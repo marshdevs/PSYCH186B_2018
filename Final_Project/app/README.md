@@ -4,6 +4,10 @@ A web app for procedurally generated music visualization and categorization by m
 
 ![Mooderator](./etc/idle.png)
 
+## Demo
+
+See https://youtu.be/1ocMwI6PYwY
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -53,7 +57,6 @@ To test the LSTM classifier,
 cd LSTM
 python lstm_mood_classification.py
 ```
-
 
 ## Built With
 
