@@ -4,9 +4,8 @@ import math
 import re
 import os
 
-class GenreFeatureData:
-
-    #'Music audio features for genre classification'
+class MoodFeatureData:
+    #Music audio features for Mood classification'
     hop_length = None
     mood_list = ['happy', 'aggressive', 'sad', 'calm']
 
@@ -15,6 +14,7 @@ class GenreFeatureData:
     dir_testfolder = "./gtzan/_test"
     dir_all_files = "./gtzan"
 
+    #create numpy array files to hold all of the training, validation, and testing data
     train_X_preprocessed_data = 'data_train_input.npy'
     train_Y_preprocessed_data = 'data_train_target.npy'
     dev_X_preprocessed_data = 'data_validation_input.npy'
@@ -45,7 +45,7 @@ class GenreFeatureData:
 
         # Training set
         self.train_X, self.train_Y = self.extract_audio_features(self.trainfiles_list)
-        with open(self .train_X_preprocessed_data, 'wb') as f:
+        with open(self.train_X_preprocessed_data, 'wb') as f:
             np.save(f, self.train_X)
         with open(self.train_Y_preprocessed_data, 'wb') as f:
             self.train_Y = self.one_hot(self.train_Y)
@@ -54,7 +54,7 @@ class GenreFeatureData:
         # Validation set
         self.dev_X, self.dev_Y = self.extract_audio_features(self.devfiles_list)
         with open(self.dev_X_preprocessed_data, 'wb') as f:
-            np.save(f, self.dev_X)
+            np.save(f, self.dev_X) # save features to numpy array file
         with open(self.dev_Y_preprocessed_data, 'wb') as f:
             self.dev_Y = self.one_hot(self.dev_Y)
             np.save(f, self.dev_Y)
@@ -81,6 +81,8 @@ class GenreFeatureData:
     def precompute_min_timeseries_len(self, list_of_audiofiles):
         for file in list_of_audiofiles:
             print("Loading " + str(file))
+            # y is audio time series for the given file 
+            # sr is sampling rate 
             y, sr = librosa.load(file)
             self.timeseries_length_list.append(math.ceil(len(y) / self.hop_length))
 
@@ -110,6 +112,7 @@ class GenreFeatureData:
 
         return data, np.expand_dims(np.asarray(target), axis=1)
 
+    #Use one-hot encoding to binarize classifications 
     def one_hot(self, Y_mood_strings):
         y_one_hot = np.zeros((Y_mood_strings.shape[0], len(self.mood_list)))
         for i, mood_string in enumerate(Y_mood_strings):
