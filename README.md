@@ -2,7 +2,7 @@
 
 A web app for procedurally generated music visualization and categorization by mood.
 
-![Mooderator](./FinalProject/app/etc/idle.png)
+![Mooderator](./Final_Project/app/etc/idle.png)
 
 ## Demo
 
